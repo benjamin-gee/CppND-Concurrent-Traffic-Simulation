@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include "TrafficLight.h"
+#include <stdlib.h>
 
 /* Implementation of class "MessageQueue" */
 
@@ -43,7 +44,8 @@ TrafficLightPhase TrafficLight::getCurrentPhase()
 
 void TrafficLight::simulate()
 {
-    // FP.2b : Finally, the private method „cycleThroughPhases“ should be started in a thread when the public method „simulate“ is called. To do this, use the thread queue in the base class. 
+    // FP.2b : Finally, the private method „cycleThroughPhases“ should be started in a thread when the public method „simulate“ is called. To do this, use the thread queue in the base class.
+    threads.emplace_back(std::thread(&TrafficLight::cycleThroughPhases, this));
 }
 
 // virtual function which is executed in a thread
@@ -53,4 +55,36 @@ void TrafficLight::cycleThroughPhases()
     // and toggles the current phase of the traffic light between red and green and sends an update method 
     // to the message queue using move semantics. The cycle duration should be a random value between 4 and 6 seconds. 
     // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles. 
+    std::chrono::time_point<std::chrono::system_clock> lastUpdate;
+    std::chrono::time_point<std::chrono::system_clock> lastChange;
+    lastUpdate = std::chrono::system_clock::now();
+    lastChange = std::chrono::system_clock::now();
+    
+    //long timeSinceLastUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastUpdate).count();
+
+    double cycleDuration = rand() % 7 + 4;
+
+
+    while (true) {
+
+        long timeSinceLastChange = std::chrono::duration_cast<std::chrono::milliseconds>(lastUpdate - lastChange).count();
+
+        if (timeSinceLastChange >= cycleDuration) {
+            if (_currentPhase == TrafficLightPhase::red) {
+                _currentPhase = TrafficLightPhase::green;
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                lastChange = std::chrono::system_clock::now();
+                cycleDuration = rand() % 7 + 4;
+            }
+            else {
+                _currentPhase = TrafficLightPhase::red;
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                lastChange = std::chrono::system_clock::now();
+                cycleDuration = rand() % 7 + 4;
+            }
+        }
+
+        lastUpdate = std::chrono::system_clock::now();
+
+    }
 }
