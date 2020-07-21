@@ -74,13 +74,11 @@ void TrafficLight::cycleThroughPhases()
                 _currentPhase = TrafficLightPhase::green;
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 lastChange = std::chrono::system_clock::now();
-                cycleDuration = rand() % 7 + 4;
             }
             else {
                 _currentPhase = TrafficLightPhase::red;
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 lastChange = std::chrono::system_clock::now();
-                cycleDuration = rand() % 7 + 4;
             }
         }
 
