@@ -26,8 +26,8 @@ T MessageQueue<T>::receive()
 
     std::unique_lock<std::mutex> lck(_mutex);
     _cond.wait(lck, [this] {return !_queue.empty(); });
-    T msg = std::move(_queue.back());
-    _queue.pop_back();
+    T msg = std::move(_queue.front());
+    _queue.pop_front();
 
     return msg;
 }
@@ -50,7 +50,7 @@ void TrafficLight::waitForGreen()
 
     while (true) {
 
-        _phase = _messageQueue->receive();
+        _phase = _messageQueue.receive();
         if (_phase == TrafficLightPhase::green) {
             return;
         }
@@ -80,15 +80,12 @@ void TrafficLight::cycleThroughPhases()
     std::chrono::time_point<std::chrono::system_clock> lastChange;
     lastUpdate = std::chrono::system_clock::now();
     lastChange = std::chrono::system_clock::now();
-    
-    //long timeSinceLastUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastUpdate).count();
-
     double cycleDuration = rand() % 7 + 4;
 
-
+    // while loop will change the light every 4-6 seconds
     while (true) {
 
-        long timeSinceLastChange = std::chrono::duration_cast<std::chrono::milliseconds>(lastUpdate - lastChange).count();
+        long timeSinceLastChange = std::chrono::duration_cast<std::chrono::seconds>(lastUpdate - lastChange).count();
 
         if (timeSinceLastChange >= cycleDuration) {
             if (_currentPhase == TrafficLightPhase::red) {
@@ -101,7 +98,7 @@ void TrafficLight::cycleThroughPhases()
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 lastChange = std::chrono::system_clock::now();
             }
-            _messageQueue->send(std::move(_currentPhase));
+            _messageQueue.send(std::move(_currentPhase));
 
         }
 
